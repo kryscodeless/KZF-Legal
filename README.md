@@ -2,6 +2,48 @@
 KZF Legal — an AI powered legal guidance platform
 helping immigrants navigate the Australian immigration system.
 
+## Expected Folder Structure
+
+This is the current baseline structure and will evolve over time as features are added.
+
+```text
+public/
+  index.html
+  css/
+    styles.css
+  js/
+    chat.js
+    upload.js
+    socket.js
+
+server/
+  app.js
+  server.js
+  routes/
+    .gitkeep
+  models/
+    .gitkeep
+  controllers/
+    .gitkeep
+  config/
+    .gitkeep
+  services/
+    .gitkeep
+
+rag/
+  chunker.js
+  embedder.js
+  vectorStore.js
+  webRetriever.js
+  contextBuilder.js
+  pipeline.js
+
+tests/
+  public/
+  rag/
+  server/
+```
+
 ## Tech Stack
 
 - **Runtime:** Node.js
