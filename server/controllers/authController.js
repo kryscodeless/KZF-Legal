@@ -1,37 +1,16 @@
-const jwt = require('jsonwebtoken');
 const passport = require('passport');
-const User = require('../models/User');
-const config = require('../config/env');
+const { registerUser, loginUser, getUserByID } = require('../services/authService')
 
 // Register a new user
 const register = async (req, res, next) => {
     try {
-        const { email, password } = req.body
+        const user = await registerUser(req.body)
 
-        // Check if user already exists
-        const existingUser = await User.findOne({ email })
-        if (existingUser) {
-            return res.status(409).json({
-                success: false,
-                error: {
-                    message: 'A user with this email already exists',
-                    code: 'USER_ALREADY_EXISTS'
-                }
-            })
-        }
-
-        // Create new user and save to database (password will be hashed by pre-save hook)
-        const user = await User.create({
-            email,
-            password
-        })
-
-        // If successful, return safe user object without password
+        // If successfully registered, return 201 with safe user object
         res.status(201).json({
             success: true,
-            data: user.toSafeObject()
+            data: user
         })
-
     } catch (error) {
         next(error)
     }
@@ -39,14 +18,12 @@ const register = async (req, res, next) => {
 
 // Login user and return JWT token
 const login = (req, res, next) => {
-    // Use Passport's local strategy with JWT to authenticate the user
-    passport.authenticate('local', { session: false }, (err, user, info) => {
-        // Pass any errors from the authentication process to the error handler
+    passport.authenticate('local', { session: false }, async (err, user, info) => {
         if (err) {
             return next(err)
         }
 
-        // If authentication fails, return 401 with error message and code
+        // If credentials are invalid, return a 401 error with message and code from the local strategy
         if (!user) {
             return res.status(401).json({
                 success: false,
@@ -57,25 +34,19 @@ const login = (req, res, next) => {
             })
         }
 
-        // Sign JWT token
-        const token = jwt.sign(
-            {
-                userId: user.userId,
-                role: user.role
-            },
-            config.JWT_SECRET,
-            { expiresIn: config.JWT_EXPIRES_IN }
-        )
+        try {
+            // If authentication is successful, generate JWT token and return it along with user data
+            const data = await loginUser(user)
 
-        // Return token and user info (without password)
-        res.status(200).json({
-            success: true,
-            data: {
-                token,
-                expiresIn: config.JWT_EXPIRES_IN,
-                user
-            }
-        })
+            // If token generation is successful, return 200 with token, expiration time, and safe user object
+            res.status(200).json({
+                success: true,
+                data
+            })
+
+        } catch (error) {
+            next(error)
+        }
     })(req, res, next)
 }
 
@@ -93,24 +64,13 @@ const logout = (req, res) => {
 // Get current authenticated user's profile
 const getMe = async (req, res, next) => {
     try {
-        // Retrieve user from database using ID from JWT payload 
-        const user = await User.findById(req.user.userId)
+        // Retrieve user from database using ID from JWT payload (set by auth middleware)
+        const user = await getUserById(req.user.userId)
 
-        // If user not found, return 404 with error message and code
-        if (!user) {
-            return res.status(404).json({
-                success: false,
-                error: {
-                    message: 'User not found',
-                    code: 'NOT_FOUND'
-                }
-            })
-        }
-        
         // If user is found, return safe user object without password
         res.status(200).json({
             success: true,
-            data: user.toSafeObject()
+            data: user
         })
 
     } catch (error) {
