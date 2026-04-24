@@ -28,15 +28,14 @@ const userSchema = new mongoose.Schema({
 });
 
 // Hash password before saving
-userSchema.pre('save', async function (next) {
+userSchema.pre('save', async function () {
   // Only hash if password has been modified
   if (!this.isModified('password')) {
-    return next()
+    return
   }
   // Generate salt to add brute-force protection and hash the password
   const salt = await bcrypt.genSalt(12)
   this.password = await bcrypt.hash(this.password, salt)
-  next()
 })
 
 // Method to compare entered password with hashed password in database
