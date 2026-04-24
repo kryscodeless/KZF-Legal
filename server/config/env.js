@@ -7,20 +7,29 @@ dotenv.config();
 // Define a schema for environment variables
 const envSchema = z.object({
 
-    // Server configuration
-    PORT: z
-        .string()
-        .default('3000')
-        .transform((value) => parseInt(value, 10)),
+  // Server configuration
+  PORT: z
+    .string()
+    .default('3000')
+    .transform((value) => parseInt(value, 10)),
 
-    NODE_ENV: z
-        .enum(['development', 'production', 'test'])
-        .default('development'),
+  NODE_ENV: z
+    .enum(['development', 'production', 'test'])
+    .default('development'),
 
-    // Database configuration
-    MONGODB_URI: z
-        .string()
-        .min(1, 'MONGODB_URI is required')
+  // Database configuration
+  MONGODB_URI: z
+    .string()
+    .min(1, 'MONGODB_URI is required'),
+
+    // JWT configuration
+    JWT_SECRET: z
+    .string()
+    .min(32, 'JWT_SECRET must be at least 32 characters long'),
+
+  JWT_EXPIRES_IN: z
+    .string()
+    .default('7d')
 });
 
 // Parse and validate process.env against the schema
