@@ -8,13 +8,10 @@ const registerUser = async ({ email, password }) => {
 
     // If user already exists, return a 409 error with message and code
     if (existingUser) {
-        return res.status(409).json({
-            success: false,
-            error: {
-                message: 'A user with this email already exists',
-                code: 'USER_ALREADY_EXISTS'
-            }
-        })
+        const error = new Error('A user with this email already exists')
+        error.statusCode = 409
+        error.code = 'USER_ALREADY_EXISTS'
+        throw error
     }
 
     // Create new user and save to database (password will be hashed by pre-save hook)
