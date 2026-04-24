@@ -1,6 +1,9 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
+// Note: In authentication, mongoose validation acts as a safety net, 
+// but we will also validate inputs at the API level using Zod schemas 
+// and middleware for better error handling and security.
 const userSchema = new mongoose.Schema({
      email: {
       type: String,
