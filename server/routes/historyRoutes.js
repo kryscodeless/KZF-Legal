@@ -26,7 +26,7 @@ router.get("/:chatID", (req, res) => {
 });
 
 // Delete chat history route (placeholder)
-router.delete('/:sessionId', (req, res) => {
+router.delete('/:chatID', (req, res) => {
   res.status(501).json({
     success: false,
     error: { 
