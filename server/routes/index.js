@@ -1,4 +1,5 @@
 const express = require("express");
+const healthRoutes = require("./healthRoutes");
 const authRoutes = require("./authRoutes");
 const chatRoutes = require("./chatRoutes");
 const historyRoutes = require("./historyRoutes");
@@ -12,6 +13,7 @@ const router = express.Router();
 
 // Public routes
 router.use("/auth", authRoutes);
+router.use("/health", healthRoutes);
 
 // Protected routes (require authentication)
 router.use("/chat", requireAuth, chatRoutes);

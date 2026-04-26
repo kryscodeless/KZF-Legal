@@ -3,8 +3,8 @@ const express = require("express");
 // Initialize router
 const router = express.Router();
 
-// Placeholder route
-router.all("/", (req, res) => {
+// Chat route (placeholder)
+router.post("/", (req, res) => {
   res.status(501).json({
     success: false,
     error: {
