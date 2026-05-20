@@ -16,7 +16,7 @@
 | Field | Type | Required | Rules |
 |---|---|---|---|
 | `email` | string | Yes | Valid email format |
-| `password` | string | Yes | ≥8 chars, 1 uppercase, 1 number, 1 special char |
+| `password` | string | Yes | ≥8 chars |
 
 ```json
 {
