@@ -9,6 +9,7 @@
     "seed": "node server/utils/seed.js",
     "seed:clear": "node server/utils/seed.js --clear",
     "test": "mocha --recursive tests/ --file tests/server/setup.js --exit --timeout 10000",
+    "test:e2e": "playwright test --config=tests/e2e/playwright.config.js",
     "rag:ingest": "node rag/scripts/ingest.js",
     "rag:query": "node rag/scripts/query.js"
   },
@@ -41,6 +42,7 @@
     "zod": "^3.25.76"
   },
   "devDependencies": {
+    "@playwright/test": "^1.54.2",
     "chai": "^6.2.2",
     "mocha": "^11.7.5",
     "nodemon": "^3.1.14",
