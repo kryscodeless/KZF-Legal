@@ -572,6 +572,64 @@ input, textarea { font-family: inherit; }
   margin-left: 3px;
   vertical-align: middle;
 }
+
+.citation-link {
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.citation-link:hover {
+  background: var(--sage);
+  color: white;
+}
+
+.citations-block {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+
+.citations-heading {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+
+.citations-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.citations-item {
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--text-main);
+  scroll-margin-top: 12px;
+}
+
+.citations-item:target {
+  background: var(--sage-pale);
+  border-radius: 8px;
+  padding: 4px 6px;
+}
+
+.citation-snippet {
+  margin-top: 4px;
+  color: var(--text-muted);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.bubble.ai a {
+  color: var(--sage-darker);
+  font-weight: 700;
+}
  
 /* typing indicator animation */
 .typing-indicator {

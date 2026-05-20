@@ -126,6 +126,7 @@ describe("ragService (v2)", () => {
     it("throws RAG_UPSTREAM_ERROR when embedding fails", async () => {
       ragService.__setState({
         embedder: sinon.stub().rejects(new Error("OpenAI unreachable")),
+        vectorStore: { countByNamespace: sinon.stub().resolves(1), search: sinon.stub() },
       });
 
       try {
@@ -161,28 +162,50 @@ describe("ragService (v2)", () => {
       }
     });
 
-    it("scopes vector search to provided documentIds", async () => {
-      const search = sinon.stub().returns([]);
+    it("merges scoped user search with global corpus", async () => {
+      const search = sinon.stub();
+      search.onFirstCall().returns([{
+        id: "upload:0",
+        chunk: "checklist only",
+        score: 0.95,
+        metadata: { documentId: "doc-a", sourceId: "doc-a" },
+        namespace: "user:u1",
+        vector: [],
+      }]);
+      search.onSecondCall().returns([{
+        id: "global:0",
+        chunk: "subclass 500 work hours",
+        score: 0.88,
+        metadata: { sourceId: "Subclass_500_Student_visa.pdf" },
+        namespace: "global",
+        vector: [],
+      }]);
       ragService.__setState({
         embedder: sinon.stub().resolves([{ vector: [1, 0], chunk: "question" }]),
-        vectorStore: { search },
+        vectorStore: { countByNamespace: sinon.stub().resolves(1), search },
         webRetriever: sinon.stub().resolves({ query: "q", sources: [] }),
-        contextBuilder: sinon.stub().returns({ contextText: "", citations: [] }),
-        generator: sinon.stub().resolves("Scoped answer"),
+        contextBuilder: sinon.stub().returns({ contextText: "merged", citations: [] }),
+        generator: sinon.stub().resolves("Merged answer"),
       });
 
       await ragService.submitQuery({
         userId: "u1",
         question: "What are subclass 500 requirements?",
-        documentIds: ["doc-a", "doc-b"],
+        documentIds: ["doc-a"],
       });
 
-      expect(search.calledOnce).to.equal(true);
+      expect(search.calledTwice).to.equal(true);
       expect(search.firstCall.args[0]).to.deep.equal({
         queryVector: [1, 0],
         limit: 4,
         namespaces: ["user:u1"],
-        documentIds: ["doc-a", "doc-b"],
+        documentIds: ["doc-a"],
+      });
+      expect(search.secondCall.args[0]).to.deep.equal({
+        queryVector: [1, 0],
+        limit: 4,
+        namespaces: ["global"],
+        documentIds: null,
       });
     });
   });
