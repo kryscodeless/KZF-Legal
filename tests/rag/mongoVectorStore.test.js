@@ -4,13 +4,24 @@ const { createDefaultVectorStore } = require("../../rag/storage");
 const { createMongoVectorStore, __resetForTests } = require("../../rag/storage/mongoVectorStore");
 
 describe("rag/storage/mongoVectorStore", () => {
-  afterEach(() => {
+  let originalRagMongoUri;
+
+  beforeEach(() => {
+    originalRagMongoUri = process.env.RAG_MONGODB_URI;
     sinon.restore();
     __resetForTests();
-    delete process.env.RAG_MONGODB_URI;
+  });
+
+  afterEach(() => {
+    if (originalRagMongoUri === undefined) {
+      delete process.env.RAG_MONGODB_URI;
+    } else {
+      process.env.RAG_MONGODB_URI = originalRagMongoUri;
+    }
   });
 
   it("requires RAG_MONGODB_URI for the default vector store", () => {
+    delete process.env.RAG_MONGODB_URI;
     expect(() => createDefaultVectorStore()).to.throw("RAG_MONGODB_URI is required");
   });
 
