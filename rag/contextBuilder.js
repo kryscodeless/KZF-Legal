@@ -1,3 +1,12 @@
+function formatCitationTitle(hit) {
+  const sourceId = hit.metadata?.sourceId;
+  if (sourceId && !/^[a-f0-9]{24}$/i.test(String(sourceId))) {
+    return String(sourceId);
+  }
+
+  return "Uploaded document";
+}
+
 function buildContext({ vectorHits = [], webResults = [] }) {
   const citations = [];
   const parts = [];
@@ -6,7 +15,7 @@ function buildContext({ vectorHits = [], webResults = [] }) {
   for (const hit of vectorHits) {
     citations.push({
       id,
-      title: hit.metadata?.sourceId || "Document",
+      title: formatCitationTitle(hit),
       source: "vector",
       snippet: hit.chunk,
       documentRef: hit.metadata?.documentId || null,

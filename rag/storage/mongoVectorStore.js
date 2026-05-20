@@ -104,6 +104,11 @@ function createMongoVectorStore(options = {}) {
     await model.deleteMany({});
   }
 
+  async function countByNamespace(namespace) {
+    await ready;
+    return model.countDocuments({ namespace });
+  }
+
   function load() {
     return [];
   }
@@ -114,6 +119,7 @@ function createMongoVectorStore(options = {}) {
     upsert,
     search,
     removeByDocument,
+    countByNamespace,
     save,
     load,
     all,

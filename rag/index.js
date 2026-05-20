@@ -1,11 +1,14 @@
+const path = require("path");
 const { chunkText } = require("./chunker");
 const { embedChunks } = require("./embedder");
 const { retrieveWebContext } = require("./webRetriever");
 const { buildContext } = require("./contextBuilder");
 const { generateAnswer, MODEL } = require("./generator");
 const { createDefaultVectorStore } = require("./storage");
-const { ingestText } = require("./pipeline");
+const { ingestText, ingestCorpusDirectory } = require("./pipeline");
 const { extractDocumentText } = require("./documentExtractor");
+
+const DEFAULT_CORPUS_DIR = path.join(__dirname, "corpus");
 const {
   SubmitQueryInputSchema,
   SubmitQueryResponseSchema,
@@ -38,6 +41,36 @@ function getVectorStore() {
   return state.vectorStore;
 }
 
+let globalCorpusSeedPromise = null;
+
+async function ensureGlobalCorpusSeeded() {
+  const vectorStore = getVectorStore();
+  if (typeof vectorStore.countByNamespace !== "function") {
+    return;
+  }
+
+  if (!globalCorpusSeedPromise) {
+    globalCorpusSeedPromise = (async () => {
+      const count = await vectorStore.countByNamespace("global");
+      if (count > 0) {
+        return;
+      }
+
+      await ingestCorpusDirectory({
+        corpusDir: process.env.RAG_CORPUS_DIR || DEFAULT_CORPUS_DIR,
+        namespace: "global",
+        vectorStore,
+      });
+      await Promise.resolve(vectorStore.save());
+    })().catch((err) => {
+      globalCorpusSeedPromise = null;
+      throw err;
+    });
+  }
+
+  await globalCorpusSeedPromise;
+}
+
 function init() {
   return { ready: true };
 }
@@ -67,6 +100,8 @@ async function ingestDocument({ userId, documentId, filePath, mimeType }) {
     throw makeRagError("RAG_VALIDATION_ERROR", `Cannot read file: ${err.message}`, false);
   }
 
+  await ensureGlobalCorpusSeeded();
+
   const namespace = `user:${input.userId}`;
   const vectorStore = getVectorStore();
   const chunks = await ingestText({
@@ -86,9 +121,51 @@ async function ingestDocument({ userId, documentId, filePath, mimeType }) {
   });
 }
 
+async function retrieveVectorHits(vectorStore, queryVector, userId, scopedDocumentIds) {
+  const limit = 4;
+
+  if (!scopedDocumentIds) {
+    return Promise.resolve(vectorStore.search({
+      queryVector,
+      limit,
+      namespaces: ["global", `user:${userId}`],
+      documentIds: null,
+    }));
+  }
+
+  const [userHits, globalHits] = await Promise.all([
+    Promise.resolve(vectorStore.search({
+      queryVector,
+      limit,
+      namespaces: [`user:${userId}`],
+      documentIds: scopedDocumentIds,
+    })),
+    Promise.resolve(vectorStore.search({
+      queryVector,
+      limit,
+      namespaces: ["global"],
+      documentIds: null,
+    })),
+  ]);
+
+  const seen = new Set();
+  return [...userHits, ...globalHits]
+    .filter((hit) => {
+      if (seen.has(hit.id)) {
+        return false;
+      }
+      seen.add(hit.id);
+      return true;
+    })
+    .sort((a, b) => (b.score || 0) - (a.score || 0))
+    .slice(0, limit);
+}
+
 async function submitQuery({ userId, question, documentIds }) {
   const input = SubmitQueryInputSchema.parse({ userId, question, documentIds });
   const startedAt = Date.now();
+
+  await ensureGlobalCorpusSeeded();
 
   let embeddedQuestion;
   try {
@@ -99,14 +176,14 @@ async function submitQuery({ userId, question, documentIds }) {
 
   const queryVector = embeddedQuestion[0]?.vector || [];
   const scopedDocumentIds = input.documentIds?.length ? input.documentIds : null;
-  const vectorHits = await Promise.resolve(getVectorStore().search({
+  const vectorStore = getVectorStore();
+
+  const vectorHits = await retrieveVectorHits(
+    vectorStore,
     queryVector,
-    limit: 4,
-    namespaces: scopedDocumentIds
-      ? [`user:${input.userId}`]
-      : ["global", `user:${input.userId}`],
-    documentIds: scopedDocumentIds,
-  }));
+    input.userId,
+    scopedDocumentIds,
+  );
 
   let webResponse;
   try {
@@ -174,6 +251,7 @@ function __setState(nextState = {}) {
 function __resetState() {
   Object.assign(state, _defaultFns);
   state.vectorStore = null;
+  globalCorpusSeedPromise = null;
 }
 
 module.exports = { init, ingestDocument, submitQuery, removeDocument, __setState, __resetState };
