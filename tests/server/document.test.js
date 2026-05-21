@@ -5,6 +5,9 @@ const path = require("path");
 const fs = require("fs");
 const app = require("../../server/app");
 const { createUserAndToken } = require("./helpers/mockAuth");
+const sinon = require("sinon");
+const ragService = require("../../rag/index");
+const { createFakeIo } = require("./helpers/fakeSocket");
 
 // Path to fixture files used across the suite
 const FIXTURES_DIR = path.join(__dirname, "fixtures");
@@ -35,10 +38,28 @@ const uploadDocument = async (token, chatId, fixtureName = "sample.pdf") => {
 describe("POST /api/documents/upload/:chatId", () => {
     let token;
     let chatId;
+    let ragStub;
+    let fakeIo;
 
     beforeEach(async () => {
+        // Create a user and chat for testing
         ({ token } = await createUserAndToken());
         chatId = await createChat(token);
+
+        // Wire a fake Socket.io into the Express app for this test
+        fakeIo = createFakeIo();
+        app.set("io", fakeIo);
+
+        // Stub the RAG ingestion call so processUpload doesn't hit external services
+        ragStub = sinon.stub(ragService, "ingestDocument").resolves({
+            extractedSummary: "Stubbed summary.",
+        });
+    });
+
+    afterEach(async () => {
+        // Restore the original RAG service method and clean up the fake Socket.io instance
+        ragStub.restore();
+        app.set("io", undefined);
     });
 
     // Standard successful upload — should return 202 with a pending documentId
@@ -174,9 +195,27 @@ describe("POST /api/documents/upload/:chatId", () => {
 // Document lisiting tests
 describe("GET /api/documents/", () => {
     let token;
+    let ragStub;
+    let fakeIo;
 
     beforeEach(async () => {
+        // Create a user for testing
         ({ token } = await createUserAndToken());
+
+        // Wire a fake Socket.io into the Express app for this test
+        fakeIo = createFakeIo();
+        app.set("io", fakeIo);
+
+        // Stub the RAG ingestion call so processUpload doesn't hit external services
+        ragStub = sinon.stub(ragService, "ingestDocument").resolves({
+            extractedSummary: "Stubbed summary.",
+        });
+    });
+
+    afterEach(async () => {
+        // Restore the original RAG service method and clean up the fake Socket.io instance
+        ragStub.restore();
+        app.set("io", undefined);
     });
 
     // Empty list when no documents exist
@@ -250,10 +289,28 @@ describe("GET /api/documents/", () => {
 describe("GET /api/documents/chat/:chatId", () => {
     let token;
     let chatId;
+    let ragStub;
+    let fakeIo;
 
     beforeEach(async () => {
+        // Create a user and chat for testing
         ({ token } = await createUserAndToken());
         chatId = await createChat(token);
+
+        // Wire a fake Socket.io into the Express app for this test
+        fakeIo = createFakeIo();
+        app.set("io", fakeIo);
+
+        // Stub the RAG ingestion call so processUpload doesn't hit external services
+        ragStub = sinon.stub(ragService, "ingestDocument").resolves({
+            extractedSummary: "Stubbed summary.",
+        });
+    });
+
+    afterEach(async () => {
+        // Restore the original RAG service method and clean up the fake Socket.io instance
+        ragStub.restore();
+        app.set("io", undefined);
     });
 
     // Standard retrieval — returns documents within the chat
@@ -331,11 +388,32 @@ describe("DELETE /api/documents/:documentId", () => {
     let token;
     let chatId;
     let documentId;
+    let ragStub;
+    let fakeIo;
 
     beforeEach(async () => {
+        // Create a user and chat for testing
         ({ token } = await createUserAndToken());
         chatId = await createChat(token);
+        
+        // Wire a fake Socket.io into the Express app for this test
+        fakeIo = createFakeIo();
+        app.set("io", fakeIo);  
+
+        // Stub the RAG ingestion call so processUpload doesn't hit external services
+        ragStub = sinon.stub(ragService, "ingestDocument").resolves({
+            extractedSummary: "Stubbed summary.",
+        });
+
         documentId = await uploadDocument(token, chatId, "sample.pdf");
+        // Wait a moment to ensure the document is fully processed and available for deletion
+        await new Promise(resolve => setTimeout(resolve, 100));
+    });
+
+    afterEach(async () => {
+        // Restore the original RAG service method and clean up the fake Socket.io instance
+        ragStub.restore();
+        app.set("io", undefined);
     });
 
     // Standard successful deletion

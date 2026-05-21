@@ -150,9 +150,7 @@ const processDocument = async (documentId, userId, file_path, mimeType, io) => {
     });
   } catch (err) {
     // Log the error with contextual information for easier debugging
-    if (config.NODE_ENV !== "test") {
-      logger.error(`processDocument error for documentId ${documentId}:`, err);
-    }
+    logger.error(`processDocument error for documentId ${documentId}:`, err);
 
     try {
       // Update the document status to "failed" and store the error message for debugging purposes.
@@ -162,12 +160,10 @@ const processDocument = async (documentId, userId, file_path, mimeType, io) => {
       });
     } catch (updateErr) {
       // If updating the document status also fails, log that error as well.
-      if (config.NODE_ENV !== "test") {
-        logger.error(
-          `Failed to update document status to failed for documentId ${documentId}:`,
-          updateErr,
-        );
-      }
+      logger.error(
+        `Failed to update document status to failed for documentId ${documentId}:`,
+        updateErr,
+      );
     }
 
     // Emit the failure event to the client so they can inform the user and potentially allow them to retry or delete the document.
