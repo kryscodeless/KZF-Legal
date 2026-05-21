@@ -68,6 +68,9 @@ describe("POST /api/documents/upload/:chatId", () => {
             .post(`/api/documents/upload/${chatId}`)
             .set("Authorization", `Bearer ${token}`)
             .attach("document", fixturePath("sample.pdf"));
+        
+        // Wait a moment to ensure the document is fully processed and the stubbed RAG call is made
+        await new Promise(resolve => setTimeout(resolve, 100));
 
         expect(res.status).to.equal(202);
         expect(res.body.success).to.be.true;
@@ -82,6 +85,9 @@ describe("POST /api/documents/upload/:chatId", () => {
             .post(`/api/documents/upload/${chatId}`)
             .set("Authorization", `Bearer ${token}`)
             .attach("document", fixturePath("sample.txt"));
+
+        // Wait a moment to ensure the document is fully processed and the stubbed RAG call is made
+        await new Promise(resolve => setTimeout(resolve, 100));
 
         expect(res.status).to.equal(202);
         expect(res.body.data.status).to.equal("pending");

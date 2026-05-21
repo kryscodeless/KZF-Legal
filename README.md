@@ -232,7 +232,7 @@ tests/
 | `npm run seed:clear` | Clear all seeded data |
 | `npm run test:server` | Run the Mocha server-side test suite (unit + integration) |
 | `npm run test:rag` | Run the Mocha RAG pipeline test suite |
-| `npm run test:e2e` | Run the Playwright end-to-end tests |
+| `npm run test:e2e` | Run the Playwright end-to-end tests (needs a prod/dev server spun up in background) |
 | `npm run rag:ingest` | Ingest the corpus PDFs into the vector store |
 | `npm run rag:query` | Run an ad-hoc RAG query from the CLI |
 
