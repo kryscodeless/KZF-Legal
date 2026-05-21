@@ -1,5 +1,5 @@
 # KFZ-Legal
-KZF Legal — an AI powered legal guidance platform
+KFZ Legal — an AI powered legal guidance platform
 helping immigrants navigate the Australian immigration system.
 
 ## Expected Folder Structure
@@ -92,8 +92,21 @@ rag/
   webRetriever.js
 
 tests/
+  e2e/
+    playwright.config.js
+    auth-flow.spec.js
+    upload-ask.spec.js
   public/
   rag/
+    chunkter.test.js
+    documentExtractor.test.js
+    embedder.test.js
+    mongoVectorStore.test.js
+    pipeline.test.js
+    ragService.test.js
+    vectorStore.test.js
+    fixtures/
+      student-visa.pdf
   server/
     auth.test.js
     health.test.js
@@ -104,6 +117,7 @@ tests/
     setup.js
     helpers/
       mockAuth.js
+      fakeSocket.js
     fixtures/
       generate.js
 ```
@@ -212,12 +226,13 @@ tests/
 
 | Script | Description |
 |---|---|
-| `npm start` | Start the production server |
+| `npm start` | Start the production server (`server/server.js`) |
 | `npm run dev` | Start the dev server with nodemon hot-reload |
-| `npm test` | Run the full Mocha test suite (unit + integration) |
-| `npm run test:e2e` | Run the Playwright end-to-end tests |
 | `npm run seed` | Seed the database with sample data |
 | `npm run seed:clear` | Clear all seeded data |
+| `npm run test:server` | Run the Mocha server-side test suite (unit + integration) |
+| `npm run test:rag` | Run the Mocha RAG pipeline test suite |
+| `npm run test:e2e` | Run the Playwright end-to-end tests (needs a prod/dev server spun up in background) |
 | `npm run rag:ingest` | Ingest the corpus PDFs into the vector store |
 | `npm run rag:query` | Run an ad-hoc RAG query from the CLI |
 
