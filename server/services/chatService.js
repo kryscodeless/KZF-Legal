@@ -62,7 +62,7 @@ const createPendingMessage = async (userId, query, chatId, documentIds) => {
 const processQuery = async (query, messageId, userId, documentIds, io) => {
   try {
     // Call the RAG service to process the query and retrieve an answer along with any relevant citations.
-    const ragResult = await ragService.submitQuery({userId, question: query, documentIds: documentIds.map((id) => id.toString())});
+    const ragResult = await ragService.submitQuery({ userId, question: query, documentIds: documentIds.map((id) => id.toString()) });
 
     // Update the message in DB
     await Message.findByIdAndUpdate(
@@ -88,9 +88,7 @@ const processQuery = async (query, messageId, userId, documentIds, io) => {
     });
   } catch (err) {
     // If there's an error during processing, update the message status to "failed" and emit a failed event to the client.
-    if (config.NODE_ENV !== "test") {
-      logger.error(`processQuery error for messageId ${messageId}:`, err);
-    }
+    logger.error(`processQuery error for messageId ${messageId}:`, err);
     try {
       await Message.findByIdAndUpdate(
         messageId,
@@ -98,12 +96,10 @@ const processQuery = async (query, messageId, userId, documentIds, io) => {
         { runValidators: true },
       );
     } catch (updateErr) {
-      if (config.NODE_ENV !== "test") {
-        logger.error(
-          `Failed to update message status to failed for messageId ${messageId}:`,
-          updateErr,
-        );
-      }
+      logger.error(
+        `Failed to update message status to failed for messageId ${messageId}:`,
+        updateErr,
+      );
     }
 
     io.to(`user:${userId}`).emit("chat:update", {
