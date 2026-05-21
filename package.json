@@ -8,7 +8,8 @@
     "dev": "nodemon server/server.js",
     "seed": "node server/utils/seed.js",
     "seed:clear": "node server/utils/seed.js --clear",
-    "test": "mocha --recursive tests/ --file tests/server/setup.js --exit --timeout 10000",
+    "test:server": "mocha --recursive tests/server --file tests/server/setup.js --exit --timeout 10000",
+    "test:rag": "mocha --recursive tests/rag --file tests/server/setup.js --exit --timeout 10000",
     "test:e2e": "playwright test --config=tests/e2e/playwright.config.js",
     "rag:ingest": "node rag/scripts/ingest.js",
     "rag:query": "node rag/scripts/query.js"
