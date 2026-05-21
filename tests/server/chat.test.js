@@ -3,6 +3,9 @@ const request = require("supertest");
 const mongoose = require("mongoose");
 const app = require("../../server/app");
 const { createUserAndToken } = require("./helpers/mockAuth");
+const sinon = require("sinon");
+const ragService = require("../../rag/index");
+const { createFakeIo } = require("./helpers/fakeSocket");
 
 // Create a chat and return its ID
 const createChat = async (token, title = "Test Chat") => {
@@ -82,10 +85,38 @@ describe("POST /api/chat/create", () => {
 describe("POST /api/chat/:chatId", () => {
     let token;
     let chatId;
+    let ragStub;
+    let fakeIo;
 
     beforeEach(async () => {
+        // Create a user and a chat for testing query submissions
         ({ token } = await createUserAndToken());
         chatId = await createChat(token);
+
+        // Wire a fake Socket.io into the Express app for this test
+        fakeIo = createFakeIo();
+        app.set("io", fakeIo);
+
+        // Stub the RAG call so processQuery doesn't hit external services during tests.
+        ragStub = sinon.stub(ragService, "submitQuery").resolves({
+            answer: "Stubbed answer.",
+            citations: [
+                {
+                    id: 1,
+                    title: "Stub citation",
+                    source: "web",
+                    url: "https://example.com",
+                    snippet: "stubbed snippet",
+                },
+            ],
+        });
+    });
+
+    afterEach(() => {
+        // Restore the original RAG function after each test
+        ragStub.restore();
+        // Remove the fake Socket.io from the app to avoid side effects on other tests
+        app.set("io", undefined);
     });
 
     // Standard successful query submission - should return 202 with a pending messageId
@@ -401,10 +432,38 @@ describe("GET /api/chat/:chatId", () => {
 describe("DELETE /api/chat/:chatId", () => {
     let token;
     let chatId;
+    let ragStub;
+    let fakeIo;
 
     beforeEach(async () => {
+        // Create a user and a chat for testing deletion
         ({ token } = await createUserAndToken());
         chatId = await createChat(token);
+
+        // Wire a fake Socket.io into the Express app for this test
+        fakeIo = createFakeIo();
+        app.set("io", fakeIo);
+
+        // Stub the RAG call so processQuery doesn't hit external services during tests.
+        ragStub = sinon.stub(ragService, "submitQuery").resolves({
+            answer: "Stubbed answer.",
+            citations: [
+                {
+                    id: 1,
+                    title: "Stub citation",
+                    source: "web",
+                    url: "https://example.com",
+                    snippet: "stubbed snippet",
+                },
+            ],
+        });
+    });
+
+    afterEach(() => {
+        // Restore the original RAG function after each test
+        ragStub.restore();
+        // Remove the fake Socket.io from the app to avoid side effects on other tests
+        app.set("io", undefined);
     });
 
     // Standard successful deletion
@@ -438,6 +497,9 @@ describe("DELETE /api/chat/:chatId", () => {
             .set("Authorization", `Bearer ${token}`)
             .send({ query: "Test query" });
 
+        // Wait a moment to ensure the message is fully processed and available for deletion
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
         await request(app)
             .delete(`/api/chat/${chatId}`)
             .set("Authorization", `Bearer ${token}`);
