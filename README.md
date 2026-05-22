@@ -256,8 +256,8 @@ The frontend is a vanilla HTML/CSS/JavaScript application served from the `publi
 |------|-------------|
 | `public/css/styles.css` | All styling design tokens, layout, components. |
 | `public/js/chat.js` | Handles message rendering, typing indicator, suggestion chips, and session title updates. |
-| `public/js/socket.js` | Manages the Socket.io connection. Authenticates with the session token from login and listens for `chat:response` events. |
-| `public/js/upload.js` | Handles drag and drop, client-side file validation (type, size, duplicates), and upload progress UI. |
+| `public/js/socket.js` | Manages the Socket.io connection. Authenticates with the session token from login and listens for `chat:response` events. Also uploads files to chat. |
+| `public/js/upload.js` | Storage base for the uploaded documents from the user. |
 | `public/js/app.js` | Handles main functionality of the app flow states. |
 
 ### Socket Events
