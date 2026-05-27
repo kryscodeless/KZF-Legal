@@ -23,17 +23,60 @@
     });
   }
 
+  function renderMarkdown(text, citations) {
+    const lines = String(text || '').split('\n');
+    const results = [];
+    let listItems = [];
+    let paraLines = [];
+
+    function flushList() {
+      if (!listItems.length) return;
+      const items = listItems
+        .map((l) => `<li>${linkInlineCitations(formatInlineMarkdown(escapeHtml(l)), citations)}</li>`)
+        .join('');
+      results.push(`<ul>${items}</ul>`);
+      listItems = [];
+    }
+
+    function flushPara() {
+      if (!paraLines.length) return;
+      const html = formatInlineMarkdown(escapeHtml(paraLines.join(' ')));
+      results.push(`<p>${linkInlineCitations(html, citations)}</p>`);
+      paraLines = [];
+    }
+
+    for (const line of lines) {
+      const trimmed = line.trim();
+
+      if (!trimmed) { flushList(); flushPara(); continue; }
+
+      const headingMatch = trimmed.match(/^(#{1,3})\s+(.+)/);
+      if (headingMatch) {
+        flushList(); flushPara();
+        const level = headingMatch[1].length;
+        const html = linkInlineCitations(formatInlineMarkdown(escapeHtml(headingMatch[2])), citations);
+        results.push(`<h${level}>${html}</h${level}>`);
+        continue;
+      }
+
+      if (/^---+$/.test(trimmed)) { flushList(); flushPara(); results.push('<hr>'); continue; }
+
+      const listMatch = trimmed.match(/^[-*]\s+(.+)/);
+      if (listMatch) { flushPara(); listItems.push(listMatch[1]); continue; }
+
+      flushList();
+      paraLines.push(trimmed);
+    }
+
+    flushList();
+    flushPara();
+    return results.join('');
+  }
+
   window.formatAiResponse = function formatAiResponse(answer, citations = []) {
     const safeCitations = Array.isArray(citations) ? citations : [];
 
-    const paragraphs = String(answer || '')
-      .split(/\n\n+/)
-      .filter(Boolean)
-      .map((paragraph) => {
-        const html = formatInlineMarkdown(escapeHtml(paragraph));
-        return `<p>${linkInlineCitations(html, safeCitations)}</p>`;
-      })
-      .join('');
+    const paragraphs = renderMarkdown(answer, safeCitations);
 
     if (!safeCitations.length) {
       return paragraphs || '<p></p>';
