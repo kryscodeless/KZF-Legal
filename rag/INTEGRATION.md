@@ -314,14 +314,13 @@ BE maps these to safe FE errors and DB status updates.
 
 ---
 
-## 10) BE wiring status (repo snapshot)
+## 10) BE wiring status
 
-RAG implements the API above. Backend services still use placeholder responses until they call `rag/index.js` directly:
+- `server/services/chatService.js` — `submitQuery` wired ✅
+- `server/services/documentService.js` — `ingestDocument` wired ✅
+- `server/services/documentService.js` — `removeDocument` not yet wired; vector chunks are not cleaned up on document deletion ⚠️
 
-- `server/services/chatService.js` — `submitQuery` not wired
-- `server/services/documentService.js` — `ingestDocument` / `removeDocument` not wired
-
-Until wired, validate RAG with `npm run rag:ingest`, `npm run rag:query`, and `tests/rag/`.
+Validate the full pipeline end-to-end with `npm run rag:ingest`, `npm run rag:query`, and `tests/rag/`.
 
 ---
 
