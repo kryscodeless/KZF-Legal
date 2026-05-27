@@ -131,11 +131,11 @@ const createDocument = async (file, userId, chatId) => {
   }
 };
 
-const processDocument = async (documentId, userId, file_path, mimeType, io) => {
+const processDocument = async (documentId, userId, file_path, mimeType, io, filename) => {
   try {
     const filePath = path.join(__dirname, "..", file_path);
     // Ingest the document into the RAG pipeline to extract text, generate embeddings, and make it available for querying.
-    const result = await ragService.ingestDocument({ userId, documentId: documentId.toString(), filePath, mimeType });
+    const result = await ragService.ingestDocument({ userId, documentId: documentId.toString(), filePath, mimeType, filename });
     // Persist the extracted summary and mark as fully ingested
     await Document.findByIdAndUpdate(documentId, {
       extractedSummary: result.extractedSummary,

@@ -33,6 +33,7 @@ const IngestDocumentInputSchema = z.object({
   documentId: z.string().min(1),
   filePath: z.string().min(1),
   mimeType: z.string().optional(),
+  filename: z.string().optional(),
 });
 
 const IngestDocumentResponseSchema = z.object({

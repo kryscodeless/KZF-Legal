@@ -82,8 +82,8 @@ function makeRagError(code, message, retryable = false) {
   return err;
 }
 
-async function ingestDocument({ userId, documentId, filePath, mimeType }) {
-  const input = IngestDocumentInputSchema.parse({ userId, documentId, filePath, mimeType });
+async function ingestDocument({ userId, documentId, filePath, mimeType, filename }) {
+  const input = IngestDocumentInputSchema.parse({ userId, documentId, filePath, mimeType, filename });
   const startedAt = Date.now();
 
   let text;
@@ -111,7 +111,7 @@ async function ingestDocument({ userId, documentId, filePath, mimeType }) {
     vectorStore,
     chunker: state.chunker,
     embedder: state.embedder,
-    metadata: { userId: input.userId, documentId: input.documentId },
+    metadata: { userId: input.userId, documentId: input.documentId, filename: input.filename },
   });
   await Promise.resolve(vectorStore.save());
 

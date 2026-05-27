@@ -1,4 +1,5 @@
 function formatCitationTitle(hit) {
+  if (hit.metadata?.filename) return hit.metadata.filename;
   const sourceId = hit.metadata?.sourceId;
   if (sourceId && !/^[a-f0-9]{24}$/i.test(String(sourceId))) {
     return String(sourceId);

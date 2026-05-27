@@ -30,6 +30,7 @@ const uploadDocument = async (req, res, next) => {
     const file_path = document.storageUrl;
     const mimeType = document.mimeType;
     const documentId = document._id;
+    const filename = document.filename;
 
     // Trigger asynchronous processing of the document (e.g., text extraction, indexing)
     documentService.processDocument(
@@ -38,6 +39,7 @@ const uploadDocument = async (req, res, next) => {
       file_path,
       mimeType,
       req.app.get("io"),
+      filename,
     );
   } catch (err) {
     next(err);
